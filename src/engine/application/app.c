@@ -1,6 +1,6 @@
+#include "core/core.h"
 #include <glad/glad.h>
 #include "app.h"
-#include "core/engine.h"
 
 static Application* appPtr;
 

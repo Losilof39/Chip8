@@ -8,7 +8,7 @@
 #include "core/log.h"
 #include "core/audio.h"
 #include "core/common.h"
-#include "zone.h"
-#include "time.h"
+#include "core/zone.h"
+#include "core/time.h"
 
 #endif

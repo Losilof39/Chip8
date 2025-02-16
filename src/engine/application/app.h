@@ -1,4 +1,5 @@
-#pragma once
+#ifndef APP_H
+#define APP_H
 
 #include "core/data_types.h"
 
@@ -23,3 +24,5 @@ void Application_Run(Application* app);
 void Application_Update();
 u8 Application_GetHeapSize();
 void Application_Cleanup();
+
+#endif

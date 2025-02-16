@@ -2,7 +2,7 @@
 #define AUDIO_H
 
 #include "data_types.h"
-#include <SDL3/SDL_mixer.h>
+#include <SDL3_mixer/SDL_mixer.h>
 
 #define NUM_CHANNELS_MAX 32
 

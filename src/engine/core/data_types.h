@@ -1,5 +1,5 @@
-#ifndef CORE_H
-#define CORE_H
+#ifndef DATA_TYPES_H
+#define DATA_TYPES_H
 
 #include <stdint.h>
 #include <SDL3/SDL.h>
