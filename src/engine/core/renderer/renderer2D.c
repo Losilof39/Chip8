@@ -1,6 +1,8 @@
 #include "renderer2D.h"
 #include "core/log.h"
 #include "font.h"
+#include "core/common.h"
+#include "application/app.h"
 
 typedef struct RenderState
 {
@@ -46,7 +48,10 @@ MessageCallback(GLenum source,
 	(GLsizei)length;
 	(const void*)userParam;
 
-	log_error(message);
+	if(type > GL_DEBUG_TYPE_ERROR)
+		log_debug(FormatText("Warning: %s", message));
+	else
+		log_error(message);
 }
 
 void Renderer2D_StartOpenGL()
@@ -87,7 +92,7 @@ void Renderer2D_Init(SDL_Window* window)
 	Renderer2D_StartOpenGL();
 
 	// configure VAO/VBO
-	unsigned int VBO;
+	unsigned int VBO = 0;
 	float vertices[] = {
 		// pos      // tex
 		0.0f, 1.0f, 0.0f, 1.0f,
@@ -119,8 +124,8 @@ void Renderer2D_Init(SDL_Window* window)
 	//s_Data.spriteShader = Shader_Create("sprite", "sprite.vs", "sprite.ps");
 
 	glm_ortho(0.0f,
-		(float)WINDOW_WIDTH,
-		(float)WINDOW_HEIGHT,
+		(float)WINDOW_DEFAULT_WIDTH,
+		(float)WINDOW_DEFAULT_HEIGHT,
 		0.0f,
 		-1.0f,
 		1.0f,

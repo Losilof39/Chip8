@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.5)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -6,6 +6,9 @@ project(Chip8 VERSION 1.0)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} CACHE INTERNAL "")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
+
+set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)  # Forces shared libs
+set(FT_DISABLE_BROTLI ON CACHE BOOL "" FORCE)  # Avoids Brotli issues
 
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
@@ -34,6 +37,8 @@ set(SOURCES
 src/main.c
 src/emulator/chip8.h
 src/emulator/chip8.c
+src/emulator/cpu.h
+src/emulator/cpu.c
 src/engine/core/data_types.h
 src/engine/application/app.h
 src/engine/application/app.c
@@ -68,7 +73,10 @@ set(CGLM_LIB ${CMAKE_BINARY_DIR}/libcglm-0.dll)
 set(SDL_LIB ${CMAKE_BINARY_DIR}/SDL3.dll)
 set(SDL_MIXER_LIB ${CMAKE_BINARY_DIR}/SDL3_mixer.dll)
 
-target_link_libraries(Chip8 PRIVATE ${FREETYPE_LIB} ${CGLM_LIB} ${SDL_LIB} ${SDL_MIXER_LIB})
+#target_link_libraries(Chip8 PRIVATE cglm)
+#target_link_libraries(Chip8 PRIVATE SDL3-shared)
+#target_link_libraries(Chip8 PRIVATE SDL3_mixer-shared)
+#target_link_libraries(Chip8 PRIVATE freetype)
 
 target_include_directories(Chip8 PRIVATE src/engine)
 target_include_directories(Chip8 PRIVATE vendor/glad/include)
@@ -76,3 +84,5 @@ target_include_directories(Chip8 PRIVATE vendor/SDL/include)
 target_include_directories(Chip8 PRIVATE vendor/SDL_mixer/include)
 target_include_directories(Chip8 PRIVATE vendor/cglm/include/cglm)
 target_include_directories(Chip8 PRIVATE vendor/freetype/include)
+
+target_link_libraries(Chip8 PRIVATE ${FREETYPE_LIB} ${CGLM_LIB} ${SDL_LIB} ${SDL_MIXER_LIB})

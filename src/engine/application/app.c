@@ -12,8 +12,14 @@ void Application_Startup()
 
     log_info("SDL3 init successful");
 
+    if(appPtr->width == 0 || appPtr->height == 0)
+    {
+        appPtr->width = (u32)WINDOW_DEFAULT_WIDTH;
+        appPtr->height = (u32)WINDOW_DEFAULT_HEIGHT;
+    }
+
     appPtr->pWindow = SDL_CreateWindow((const char*)appPtr->title,
-        WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL);
+                        appPtr->width, appPtr->height, SDL_WINDOW_OPENGL);
 
 
     if ( !(appPtr->pWindow) )
@@ -116,6 +122,16 @@ void Application_Cleanup()
     SDL_Quit();
 
     log_info("Engine Shutdown");
+}
+
+u32 Application_GetWindowWidth()
+{
+    return appPtr->width;
+}
+
+u32 Application_GetWindowHeight()
+{
+    return appPtr->height;
 }
 
 void Application_Run(Application* app)
