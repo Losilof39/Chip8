@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "cpu.h"
 #include "chip8.h"
 #include "core/core.h"
@@ -14,8 +15,8 @@ static u8 v[16];
 static u16 i;
 
 // Timers
-static u16 delayTimer = 0;
-static u16 soundTimer = 0;
+static u8 delayTimer = 0;
+static u8 soundTimer = 0;
 
 // Program counter. Stores the currently executing address.
 static u16 pc = 0x200;
@@ -29,10 +30,12 @@ static u8 speed = 10;
 
 void CPU_Init()
 {
+    srand(time(NULL));
+
     memory = (u8*)Z_Malloc(4096 * sizeof(u8), PU_STATIC, NULL);
 
     CPU_LoadSpriteToMemory();
-    CPU_LoadProgramToMemory("ROM/BLINKY");
+    CPU_LoadProgramToMemory("ROM/BLITZ");
 }
 
 void CPU_Cleanup()
@@ -106,93 +109,259 @@ void CPU_ExecuteInstruction(u16 opcode)
 
     switch (opcode & 0xF000) {
         case 0x0000:
+        {
             switch (opcode) {
                 case 0x00E0:
-                    break;
+                {
+                    CHIP8_Clear();
+                }break;
+
                 case 0x00EE:
-                    break;
+                {
+                    //pc = stack.pop();
+                }break;
             }
     
-            break;
+        }break;
+
         case 0x1000:
-            break;
+        {
+            pc = (opcode & 0xFFF);
+        }break;
+
         case 0x2000:
-            break;
+        {
+            //stack.push(pc);
+            pc = (opcode & 0xFFF);
+        }break;
+
         case 0x3000:
-            break;
+        {
+            if (v[x] == (opcode & 0xFF))
+                pc += 2;
+        }break;
+
         case 0x4000:
-            break;
+        {
+            if (v[x] != (opcode & 0xFF))
+                pc += 2;
+        }break;
+
         case 0x5000:
-            break;
+        {
+            if (v[x] == v[y]) 
+                pc += 2;
+            
+        }break;
+
         case 0x6000:
-            break;
+        {
+            v[x] = (opcode & 0xFF);
+        }break;
+
         case 0x7000:
-            break;
+        {
+            v[x] += (opcode & 0xFF);
+        }break;
+
         case 0x8000:
+        {
             switch (opcode & 0xF) {
                 case 0x0:
-                    break;
+                {
+                    v[x] = v[y];
+                }break;
+
                 case 0x1:
-                    break;
+                {
+                    v[x] |= v[y];
+                }break;
+
                 case 0x2:
-                    break;
+                {
+                    v[x] &= v[y];
+                }break;
+
                 case 0x3:
-                    break;
+                {
+                    v[x] ^= v[y];
+                }break;
+
                 case 0x4:
-                    break;
+                {
+                    i16 sum = (v[x] += v[y]);
+
+                    v[0xF] = 0;
+
+                    if (sum > 0xFF)
+                        v[0xF] = 1;
+
+                    v[x] = sum;
+                }break;
+
                 case 0x5:
-                    break;
+                {
+                    v[0xF] = 0;
+
+                    if (v[x] > v[y])
+                        v[0xF] = 1;
+
+                    v[x] -= v[y];
+                }break;
+
                 case 0x6:
-                    break;
+                {
+                    v[0xF] = (v[x] & 0x1);
+                    v[x] >>= 1;
+                }break;
+
                 case 0x7:
-                    break;
+                {
+                    v[0xF] = 0;
+
+                    if (v[y] > v[x])
+                        v[0xF] = 1;
+
+                    v[x] = v[y] - v[x];
+                }break;
+
                 case 0xE:
-                    break;
+                {
+                    v[0xF] = (v[x] & 0x80);
+                    v[x] <<= 1;
+                }break;
             }
-    
-            break;
+
+        }break;
+
         case 0x9000:
-            break;
+        {
+            if (v[x] != v[y])
+                pc += 2;
+        }break;
+
         case 0xA000:
-            break;
+        {
+            i = (opcode & 0xFFF);
+        }break;
+        
         case 0xB000:
-            break;
+        {
+            pc = (opcode & 0xFFF) + v[0];
+        }break;
+
         case 0xC000:
-            break;
+        {
+            u8 random = (u8)floor( (float)rand() / (float)RAND_MAX * 0xFF);
+
+            v[x] = random & (opcode & 0xFF);
+        }break;
+
         case 0xD000:
-            break;
+        {
+            u8 width = 8;
+            u8 height = (opcode & 0xF);
+
+            v[0xF] = 0;
+
+            for (u8 row = 0; row < height; row++) 
+            {
+                u8 sprite = memory[i + row];
+
+                for (u8 col = 0; col < width; col++) 
+                {
+                    // If the bit (sprite) is not 0, render/erase the pixel
+                    if ((sprite & 0x80) > 0) 
+                    {
+                        // If setPixel returns 1, which means a pixel was erased, set VF to 1
+                        if (CHIP8_SetPixel(v[x] + col, v[y] + row))
+                            v[0xF] = 1;
+                    }
+
+                    // Shift the sprite left 1. This will move the next next col/bit of the sprite into the first position.
+                    // Ex. 10010000 << 1 will become 0010000
+                    sprite <<= 1;
+                }
+            }
+        }break;
+
         case 0xE000:
+        {
             switch (opcode & 0xFF) {
                 case 0x9E:
-                    break;
+                {
+                    //if (keyboard.isKeyPressed(this.v[x]))
+                    //    pc += 2;
+                }break;
+
                 case 0xA1:
-                    break;
+                {
+                    //if (!keyboard.isKeyPressed(this.v[x])) {
+                    //    pc += 2;
+                }break;
             }
     
-            break;
+        }break;
+
         case 0xF000:
+        {
             switch (opcode & 0xFF) {
                 case 0x07:
-                    break;
+                {
+                    v[x] = delayTimer;
+                }break;
+
                 case 0x0A:
-                    break;
+                {
+                    paused = true;
+                }break;
+
                 case 0x15:
-                    break;
+                {
+                    delayTimer = v[x];
+                }break;
+
                 case 0x18:
-                    break;
+                {
+                    soundTimer = v[x];
+                }break;
+
                 case 0x1E:
-                    break;
+                {
+                    i += v[x];
+                }break;
+
                 case 0x29:
-                    break;
+                {
+                    i = v[x] * 5;
+                }break;
+
                 case 0x33:
-                    break;
+                {
+                    memory[i] = (u8)(v[x] / 100);
+
+                    memory[i + 1] = (u8)((v[x] % 100) / 10);
+                
+                    memory[i + 2] = (u8)(v[x] % 10);
+
+                }break;
+
                 case 0x55:
-                    break;
+                {
+                    for (u8 registerIndex = 0; registerIndex <= x; registerIndex++) {
+                        memory[i + registerIndex] = v[registerIndex];
+                    }
+                }break;
+
                 case 0x65:
-                    break;
+                {
+                    for (u8 registerIndex = 0; registerIndex <= x; registerIndex++) {
+                        v[registerIndex] = memory[i + registerIndex];
+                    }
+                }break;
             }
     
-            break;
+        }break;
     
         default:
             log_error("Unknown opcode %04x", opcode);

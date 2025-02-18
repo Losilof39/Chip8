@@ -13,7 +13,7 @@ int main(int argc, char** argv)
     chip8.height = CHIP8_DISPLAY_HEIGHT * CHIP8_DISPLAY_SCALE;
     chip8.Init = CHIP8_Init;
     chip8.Update = CHIP8_Update;
-    chip8.Cleanup = CHIP8_Update;
+    chip8.Cleanup = CHIP8_Cleanup;
 
     Application_Run(&chip8);
     

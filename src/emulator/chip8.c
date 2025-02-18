@@ -57,6 +57,8 @@ b8 CHIP8_SetPixel(i8 x, i8 y)
 
     display[pixelPos] ^= 1;
 
+    R2D_DrawColoredQuad((vec3){x, y, 0}, (vec2){CHIP8_DISPLAY_SCALE, CHIP8_DISPLAY_SCALE}, (vec3){1.0f, 1.0f, 1.0f});
+
     return !display[pixelPos];
 }
 

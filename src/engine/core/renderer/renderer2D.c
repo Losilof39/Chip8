@@ -124,8 +124,8 @@ void Renderer2D_Init(SDL_Window* window)
 	//s_Data.spriteShader = Shader_Create("sprite", "sprite.vs", "sprite.ps");
 
 	glm_ortho(0.0f,
-		(float)WINDOW_DEFAULT_WIDTH,
-		(float)WINDOW_DEFAULT_HEIGHT,
+		(float)Application_GetWindowWidth(),
+		(float)Application_GetWindowHeight(),
 		0.0f,
 		-1.0f,
 		1.0f,
