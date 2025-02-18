@@ -1,4 +1,5 @@
 #include "cpu.h"
+#include "chip8.h"
 #include "core/core.h"
 
  // 4KB (4096 bytes) of memory
@@ -29,6 +30,9 @@ static u8 speed = 10;
 void CPU_Init()
 {
     memory = (u8*)Z_Malloc(4096 * sizeof(u8), PU_STATIC, NULL);
+
+    CPU_LoadSpriteToMemory();
+    CPU_LoadProgramToMemory("ROM/BLINKY");
 }
 
 void CPU_Cleanup()
@@ -67,16 +71,29 @@ void CPU_LoadSpriteToMemory()
     }
 }
 
-void CPU_LoadProgramToMemory()
+void CPU_LoadProgramToMemory(const char* romName)
 {
+    FILE* romFile;
+    const char* pathToAsset = Filesystem_GetAssetPath();
+    char* romPath = FormatText("%s/%s", pathToAsset, romName);
+
+    romFile = fopen(romPath, "rb");
+    if (romFile == NULL) {
+        log_error("Failed to read ROM: %s\n", romPath);
+    }
+    fseek(romFile, 0L, SEEK_END);
+    sizeProgram = ftell(romFile) + 1;
+    fclose(romFile);
+
+    /* Read File for Content */
+    romFile = fopen(romPath, "r");
+    program = memset(Z_Malloc(sizeProgram, PU_STATIC, NULL), '\0', sizeProgram);
+    fread(program, 1, sizeProgram - 1, romFile);
+    fclose(romFile);
+
     for (u32 loc = 0; loc < sizeProgram; loc++) {
         memory[0x200 + loc] = program[loc];
     }
-}
-
-void CPU_Cycle()
-{
-
 }
 
 void CPU_ExecuteInstruction(u16 opcode)
@@ -200,4 +217,21 @@ void CPU_PlaySound()
     } else {
         // stop playing
     }
+}
+
+void CPU_Cycle()
+{
+    for (u16 i = 0; i < speed; i++) {
+        if (!paused) {
+            u16 opcode = (memory[pc] << 8 | memory[pc + 1]);
+            CPU_ExecuteInstruction(opcode);
+        }
+    }
+
+    if (!paused) {
+        CPU_UpdateTimers();
+    }
+
+    CPU_PlaySound();
+    CHIP8_Render();
 }

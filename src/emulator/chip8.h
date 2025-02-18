@@ -7,6 +7,7 @@
 #define CHIP8_DISPLAY_WIDTH 64
 #define CHIP8_DISPLAY_HEIGHT 32
 #define CHIP8_DISPLAY_SCALE 16
+#define CHIP8_FPS 60
 
 void CHIP8_Init();
 void CHIP8_Update();

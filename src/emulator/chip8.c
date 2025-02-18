@@ -15,7 +15,15 @@ void CHIP8_Init()
 
 void CHIP8_Update()
 {
+    f32 elapsed;
+    f32 fpsInterval;
 
+    elapsed = Time_GetDeltaTime();
+    fpsInterval = 1000.0f / (f32)CHIP8_FPS;
+
+    if (elapsed < fpsInterval) {
+        CPU_Cycle();
+    }
 }
 
 void CHIP8_Cleanup()
