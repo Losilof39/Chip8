@@ -10,19 +10,18 @@ static u32 sizeProgram;
 
 // 16 8-bit registers
 static u8 v[16];
+static u16 stack[16];
 
 // Stores memory addresses. Set this to 0 since we aren't storing anything at initialization.
 static u16 i;
 
 // Timers
-static u8 delayTimer = 0;
-static u8 soundTimer = 0;
+static u8 delayTimer;
+static u8 soundTimer;
 
 // Program counter. Stores the currently executing address.
 static u16 pc = 0x200;
-
-// Don't initialize this with a size in order to avoid empty results.
-static u16 *stack;
+static u16 sp;
 
 // Some instructions require pausing, such as Fx0A.
 static b8 paused = false;
@@ -32,10 +31,12 @@ void CPU_Init()
 {
     srand(time(NULL));
 
+    sp = 0;
+
     memory = (u8*)Z_Malloc(4096 * sizeof(u8), PU_STATIC, NULL);
 
     CPU_LoadSpriteToMemory();
-    CPU_LoadProgramToMemory("ROM/BLITZ");
+    CPU_LoadProgramToMemory("ROM/test_opcode");
 }
 
 void CPU_Cleanup()
@@ -80,18 +81,26 @@ void CPU_LoadProgramToMemory(const char* romName)
     const char* pathToAsset = Filesystem_GetAssetPath();
     char* romPath = FormatText("%s/%s", pathToAsset, romName);
 
-    romFile = fopen(romPath, "rb");
-    if (romFile == NULL) {
-        log_error("Failed to read ROM: %s\n", romPath);
-    }
-    fseek(romFile, 0L, SEEK_END);
-    sizeProgram = ftell(romFile) + 1;
-    fclose(romFile);
+    romFile = fopen(romPath, "rb");  // Use binary mode
 
-    /* Read File for Content */
-    romFile = fopen(romPath, "r");
-    program = memset(Z_Malloc(sizeProgram, PU_STATIC, NULL), '\0', sizeProgram);
-    fread(program, 1, sizeProgram - 1, romFile);
+    if (!romFile) {
+        log_error("Failed to open ROM: %s", romPath);
+        return;
+    }
+
+    fseek(romFile, 0, SEEK_END);
+    sizeProgram = (u32)ftell(romFile);
+    fseek(romFile, 0, SEEK_SET);
+
+    program = (u8*)Z_Malloc(sizeProgram, PU_STATIC, NULL);
+    if (!program) {
+        log_error("Failed to allocate memory for ROM.");
+        fclose(romFile);
+        return;
+    }
+
+    // Read the full ROM file correctly
+    fread(program, 1, sizeProgram, romFile);
     fclose(romFile);
 
     for (u32 loc = 0; loc < sizeProgram; loc++) {
@@ -118,7 +127,8 @@ void CPU_ExecuteInstruction(u16 opcode)
 
                 case 0x00EE:
                 {
-                    //pc = stack.pop();
+                    if(sp > 0)
+                        pc = stack[--sp];
                 }break;
             }
     
@@ -131,7 +141,8 @@ void CPU_ExecuteInstruction(u16 opcode)
 
         case 0x2000:
         {
-            //stack.push(pc);
+            stack[sp] = pc;
+            sp++;
             pc = (opcode & 0xFFF);
         }break;
 
@@ -189,14 +200,10 @@ void CPU_ExecuteInstruction(u16 opcode)
 
                 case 0x4:
                 {
-                    i16 sum = (v[x] += v[y]);
+                    u16 sum = v[x] + v[y];  // Compute first, no modification yet
 
-                    v[0xF] = 0;
-
-                    if (sum > 0xFF)
-                        v[0xF] = 1;
-
-                    v[x] = sum;
+                    v[0xF] = (sum > 0xFF) ? 1 : 0;  // Set carry flag
+                    v[x] = (u8)sum;  // Store only lower 8 bits
                 }break;
 
                 case 0x5:
@@ -227,7 +234,7 @@ void CPU_ExecuteInstruction(u16 opcode)
 
                 case 0xE:
                 {
-                    v[0xF] = (v[x] & 0x80);
+                    v[0xF] = (v[x] & 0x80) ? 1 : 0;
                     v[x] <<= 1;
                 }break;
             }
@@ -252,7 +259,7 @@ void CPU_ExecuteInstruction(u16 opcode)
 
         case 0xC000:
         {
-            u8 random = (u8)floor( (float)rand() / (float)RAND_MAX * 0xFF);
+            u8 random = (u8)(rand() % 256);
 
             v[x] = random & (opcode & 0xFF);
         }break;

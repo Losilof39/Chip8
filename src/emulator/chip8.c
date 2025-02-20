@@ -15,14 +15,15 @@ void CHIP8_Init()
 
 void CHIP8_Update()
 {
-    f32 elapsed;
-    f32 fpsInterval;
+    f32 delta = Time_GetDeltaTime();
+    CPU_Cycle();
 
-    elapsed = Time_GetDeltaTime();
-    fpsInterval = 1000.0f / (f32)CHIP8_FPS;
+    const f32 frameTime = 1000.0f / 60.0f;  // 16.67ms per frame
+    f32 elapsedMs = delta * 1000.0f;  // Convert delta to milliseconds
 
-    if (elapsed < fpsInterval) {
-        CPU_Cycle();
+    if (elapsedMs < frameTime)
+    {
+        SDL_Delay((u32)(frameTime - elapsedMs));  // Wait for the next frame
     }
 }
 
@@ -57,7 +58,7 @@ b8 CHIP8_SetPixel(i8 x, i8 y)
 
     display[pixelPos] ^= 1;
 
-    R2D_DrawColoredQuad((vec3){x, y, 0}, (vec2){CHIP8_DISPLAY_SCALE, CHIP8_DISPLAY_SCALE}, (vec3){1.0f, 1.0f, 1.0f});
+    R2D_DrawColoredQuad((vec3){x * CHIP8_DISPLAY_SCALE, y * CHIP8_DISPLAY_SCALE, 0}, (vec2){CHIP8_DISPLAY_SCALE, CHIP8_DISPLAY_SCALE}, (vec3){1.0f, 1.0f, 1.0f});
 
     return !display[pixelPos];
 }

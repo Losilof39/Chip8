@@ -12,7 +12,7 @@ typedef struct RenderState
 	GLuint fontVAO;
 	Shader fontShader;
 	Shader flatColorShader;
-	Shader spriteShader;
+	Shader textureShader;
 	Shader fbShader;
 	mat4 camOrtho;
 	SDL_Window* pWindow;
@@ -121,6 +121,7 @@ void Renderer2D_Init(SDL_Window* window)
 
 	RState.flatColorShader = Shader_Create("flatcolor", "flatcolor.vs", "flatcolor.ps");
 	RState.fontShader = Shader_Create("font", "font.vs", "font.ps");
+	RState.textureShader = Shader_Create("texture2d", "texture2d.vs", "texture2d.ps");
 	//s_Data.spriteShader = Shader_Create("sprite", "sprite.vs", "sprite.ps");
 
 	glm_ortho(0.0f,
@@ -139,6 +140,11 @@ void Renderer2D_Init(SDL_Window* window)
 	Shader_Use(s_Data.flatColorShader);
 	Shader_SetMat4(renderState.flatColorShader, "u_Ortho", renderState.camOrtho);
 	Shader_Unbind();*/
+
+	Shader_Use(RState.textureShader);
+	Shader_SetMat4(RState.textureShader, "u_Ortho", RState.camOrtho);
+	Shader_SetInt(RState.textureShader, "image", 0);
+	Shader_Unbind();
 
 	Shader_Use(RState.flatColorShader);
 	Shader_SetMat4(RState.flatColorShader, "u_Ortho", RState.camOrtho);
@@ -196,6 +202,29 @@ void R2D_DrawColoredQuad(vec3 position, vec2 size, vec3 color)
 
 	Shader_Use(RState.flatColorShader);
 	Shader_SetVec3(RState.flatColorShader, "u_Color", color);
+	Shader_SetMat4(RState.flatColorShader, "u_Model", model);
+
+	glBindVertexArray(RState.VAO);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glBindVertexArray(0);
+
+
+	Shader_Unbind();
+}
+
+void R2D_RenderTexturedQuad(vec3 position, vec2 size, texture2d texture)
+{
+	mat4 model, translate, scale;
+
+	glm_mat4_identity(model);
+	glm_mat4_identity(translate);
+	glm_mat4_identity(scale);
+
+	glm_scale(scale, size);
+	glm_translate(translate, position);
+	glm_mat4_mul(translate, scale, model);
+
+	Shader_Use(RState.flatColorShader);
 	Shader_SetMat4(RState.flatColorShader, "u_Model", model);
 
 	glBindVertexArray(RState.VAO);
